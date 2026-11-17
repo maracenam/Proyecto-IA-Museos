@@ -16,8 +16,8 @@ def cargar(nombre: str) -> BeautifulSoup:
     return BeautifulSoup((FIXTURES / nombre).read_text(encoding="utf-8"), "html.parser")
 
 
-def test_hay_entre_5_y_10_fichas():
-    assert 5 <= len(FICHAS) <= 10
+def test_hay_suficientes_fichas():
+    assert 5 <= len(FICHAS) <= 12
 
 
 @pytest.mark.parametrize("ruta", FICHAS, ids=lambda p: p.stem)

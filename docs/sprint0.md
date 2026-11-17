@@ -11,7 +11,7 @@ Estado del checklist de `CLAUDE.md` §6:
 | 3 | Listado: paginación y total | ✅ 77 registros, 4 páginas de 21 |
 | 4 | 5–10 fichas como fixtures | ✅ 10 fichas (⚠️ ninguna ficha de Magallanes está sin imagen) |
 | 5 | Postgres local + migraciones | ✅ `docker compose up -d` aplica las migraciones; probado con pytest |
-| 6 | Proyecto en Supabase + pgvector + RLS | ✅ Proyecto `observatorio-surdoc` creado, con RLS activa (falta un ajuste menor, ver §6.1) |
+| 6 | Proyecto en Supabase + pgvector + RLS | ✅ Proyecto `observatorio-surdoc` creado, con RLS y permisos verificados (§6.1) |
 | 7 | Ollama en el PC y comparación de modelos | ✅ Elegido `gemma2:2b`: 9/10 aciertos, 0,8 s por valor, 100 % en GPU (§6.2) |
 | 8 | Documentar hallazgos | ✅ Este documento |
 
@@ -128,7 +128,7 @@ Hallazgos que corrigen o precisan lo que sabíamos:
 | `001_esquema_inicial` | 11 tablas, pgvector, museo 16 | ✅ |
 | `002a_rls_politicas` | RLS en las 11 tablas y todas las políticas de `002_rls.sql` | ✅ |
 | `003_vector_en_extensions` | pgvector movido de `public` a `extensions` | ✅ |
-| `revoke` de `002_rls.sql` | Quitar los permisos por defecto de `anon`/`authenticated` | ⏳ Pendiente |
+| `revoke` de `002_rls.sql` | Quitar los permisos por defecto de `anon`/`authenticated` | ✅ Aplicado a mano en el SQL Editor y verificado |
 
 La migración 002 se aplicó en dos partes porque la integración pide confirmación para las sentencias `drop`/`revoke`, y esa confirmación expiraba sin respuesta. Mientras faltan los `revoke`, la protección la da RLS: las tablas de bronce (`registros_raw`, `cuarentena`) no tienen políticas, así que `anon` y `authenticated` no ven ni escriben filas, y ninguna tabla tiene política de escritura salvo `revisiones` (solo revisores). Los `revoke` son una defensa adicional. Para terminar, ejecutar en el SQL Editor:
 

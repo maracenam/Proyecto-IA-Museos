@@ -56,7 +56,9 @@ Inicialmente se analizó la ficha `/registro/24-4` ("Mesa ratona") y la portada.
 
 - Campos simples: `div.field.field--inline` con `div.field-label` (etiqueta) y `div.field-item` (valor). Algunos tienen varios `div.field-item`. La clase `field--name-*` es un identificador estable del campo (ej. `field--name-conservation-state`).
 - Bloque de objeto `div.field--name-object`: varios `div.form-item`, cada uno con `label.form-item__label` + `div.field-item` (Objeto, Nombre alternativo, Dimensiones, Técnica / Material, Ubicación, Situación).
-- **Técnica / Material**: cada valor es un `div.technical-item` con la forma `técnica - material`, cada parte con su propio enlace (ej. "Tallado - Madera", "Ahuecar - Madera"). A veces solo viene el material ("Piedra").
+- **Técnica / Material**: cada valor es un `div.technical-item` con la forma `técnica - material`, cada parte con su propio enlace (ej. "Tallado - Madera", "Ahuecar - Madera"). A veces solo viene el material ("Piedra") y a veces varios materiales separados por coma (`16-919`: "Piedra, Cuero (material animal)"; se guardan con el mismo `grupo`).
+- **Listado:** una ficha sin "Objeto" (`16-972`) no trae `a.record-title`; tomar cualquier enlace `/registro/…` de la tarjeta.
+- **robots.txt** usa comodines (`/registro/*/pdf`): `urllib.robotparser` no los entiende; usar `pipeline/extract/robots.py`.
 - Etiquetas encontradas en Magallanes: Institución, Número de registro, Nº de inventario, Clasificación, Colección, Objeto, Nombre alternativo, Dimensiones, Técnica / Material, Ubicación, Situación, Descripción, Estado de conservación, Adquisición, Forma de ingreso, Fecha de ingreso, Registradores, Área geográfica, Área cultural primer nivel, Área cultural segundo nivel, Cultura originaria, Cultura arqueológica, Procedencia, Nombre sitio, Historia del objeto, Historia de propiedad y uso. (No existe una etiqueta "Cultura" a secas.)
 - Imágenes: carrusel `a.litebox` con `href` a `/sites/default/files/record_images/*.jpg` (antiguas) **o** `/sites/default/files/records/images/AAAA-MM/*.jpg` (nuevas). El `alt`/`title` del `img` trae el **crédito del fotógrafo** (puede venir vacío en algunas imágenes).
 
@@ -106,7 +108,8 @@ Inicialmente se analizó la ficha `/registro/24-4` ("Mesa ratona") y la portada.
 
 ## 6. Estado
 
-- **Sprint 0:** completo, ver `docs/sprint0.md`. Supabase: proyecto `observatorio-surdoc` (ref `bksdjmwdvrxwtlniatbm`, `sa-east-1`) con esquema y RLS aplicados (faltan los `revoke`, §6.1). Modelo local elegido: `gemma2:2b` (9/10 aciertos, 0,8 s por valor en GPU).
+- **Sprint 0:** completo, ver `docs/sprint0.md`. Supabase: proyecto `observatorio-surdoc` (ref `bksdjmwdvrxwtlniatbm`, `sa-east-1`) con esquema, RLS y permisos aplicados y verificados. Modelo local elegido: `gemma2:2b` (9/10 aciertos, 0,8 s por valor en GPU).
+- **Sprint 1:** completo, ver `docs/sprint1.md`. `python -m pipeline.run --museo 16` carga las 77 fichas (bronce y plata) en ~3 min; re-ejecutar no duplica. Datos aún solo en Postgres local: cargar en Supabase requiere la cadena de conexión.
 
 ## 7. Decisiones pendientes
 
