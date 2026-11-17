@@ -1,0 +1,39 @@
+name: pruebas
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  pruebas:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: pgvector/pgvector:pg17
+        env:
+          POSTGRES_DB: observatorio
+          POSTGRES_USER: observatorio
+          POSTGRES_PASSWORD: observatorio
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U observatorio"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgresql://observatorio:observatorio@localhost:5432/observatorio
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      - name: Instalar dependencias
+        run: uv sync
+      - name: Aplicar migraciones
+        run: |
+          for archivo in db/migrations/*.sql; do
+            psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -q -f "$archivo"
+          done
+      - name: Estilo (ruff)
+        run: uv run ruff check . && uv run ruff format --check .
+      - name: Pruebas (pytest)
+        run: uv run pytest -q

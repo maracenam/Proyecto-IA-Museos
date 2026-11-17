@@ -1,0 +1,32 @@
+# Entorno local de desarrollo: `docker compose up -d`
+# Postgres con pgvector; las migraciones de db/migrations se aplican solas
+# la primera vez que se crea el volumen. Ollama es opcional (perfil "ia").
+services:
+  postgres:
+    image: pgvector/pgvector:pg17
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-observatorio}
+      POSTGRES_USER: ${POSTGRES_USER:-observatorio}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-observatorio}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - datos_postgres:/var/lib/postgresql/data
+      - ./db/migrations:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$$POSTGRES_USER\" -d \"$$POSTGRES_DB\""]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  ollama:
+    image: ollama/ollama:latest
+    profiles: ["ia"]
+    ports:
+      - "11434:11434"
+    volumes:
+      - datos_ollama:/root/.ollama
+
+volumes:
+  datos_postgres:
+  datos_ollama:
