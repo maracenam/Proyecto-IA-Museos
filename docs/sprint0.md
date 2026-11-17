@@ -11,7 +11,7 @@ Estado del checklist de `CLAUDE.md` §6:
 | 3 | Listado: paginación y total | ✅ 77 registros, 4 páginas de 21 |
 | 4 | 5–10 fichas como fixtures | ✅ 10 fichas (⚠️ ninguna ficha de Magallanes está sin imagen) |
 | 5 | Postgres local + migraciones | ✅ `docker compose up -d` aplica las migraciones; probado con pytest |
-| 6 | Proyecto en Supabase + pgvector + RLS | ⏳ Pendiente: requiere tu cuenta. RLS ya está escrita y probada en local |
+| 6 | Proyecto en Supabase + pgvector + RLS | ✅ Proyecto `observatorio-surdoc` creado, con RLS activa (falta un ajuste menor, ver §6.1) |
 | 7 | Ollama en el PC y comparación de modelos | ⏳ Pendiente: se corre en tu PC con `scripts/probar_modelos_ollama.py` |
 | 8 | Documentar hallazgos | ✅ Este documento |
 
@@ -107,6 +107,7 @@ Hallazgos que corrigen o precisan lo que sabíamos:
 - `docker compose up -d` levanta `pgvector/pgvector:pg17` y aplica `db/migrations/*.sql` la primera vez que se crea el volumen.
 - Para volver a aplicar desde cero: `docker compose down -v && docker compose up -d`.
 - Las migraciones son idempotentes (se pueden correr de nuevo con `psql -f`).
+- pgvector se instala en el esquema `extensions`, no en `public` (aviso de seguridad de Supabase). `003_vector_en_extensions.sql` corrige bases creadas antes de este cambio; se probó sobre una base con la extensión en `public`.
 - Cambios al modelo de datos respecto del diseño original (ya reflejados en `DISENO_TECNICO.md`):
   - `registro_terminos`: `fuente_termino` (`aat` / `tesauro_regional`) + `id_termino` en vez de `aat_id`.
   - `vocabulario`: clave `campo` + `fuente_termino` + `id_termino`.
@@ -120,12 +121,28 @@ Hallazgos que corrigen o precisan lo que sabíamos:
 
 ### 6.1 Supabase (ítem 6)
 
-1. Crear el proyecto en el plan gratuito (región São Paulo, la más cercana).
-2. Aplicar `db/migrations/001_esquema_inicial.sql` y `002_rls.sql` en el SQL Editor, en ese orden. La extensión `vector` se habilita en la primera migración.
-3. En Authentication → Sign In / Providers, **desactivar los registros públicos** (los revisores se invitan a mano) y agregar su uid a la tabla `revisores`.
-4. Revisar Advisors → Security: no debería quedar ninguna tabla sin RLS.
+**Hecho (17-11-2026):** proyecto `observatorio-surdoc` (ref `bksdjmwdvrxwtlniatbm`, región `sa-east-1`, plan gratuito), organización `maracenam`.
 
-Puedo hacerlo yo mediante la integración de Supabase si me autorizas a crear el proyecto en tu cuenta.
+| Migración en Supabase | Contenido | Estado |
+|---|---|---|
+| `001_esquema_inicial` | 11 tablas, pgvector, museo 16 | ✅ |
+| `002a_rls_politicas` | RLS en las 11 tablas y todas las políticas de `002_rls.sql` | ✅ |
+| `003_vector_en_extensions` | pgvector movido de `public` a `extensions` | ✅ |
+| `revoke` de `002_rls.sql` | Quitar los permisos por defecto de `anon`/`authenticated` | ⏳ Pendiente |
+
+La migración 002 se aplicó en dos partes porque la integración pide confirmación para las sentencias `drop`/`revoke`, y esa confirmación expiraba sin respuesta. Mientras faltan los `revoke`, la protección la da RLS: las tablas de bronce (`registros_raw`, `cuarentena`) no tienen políticas, así que `anon` y `authenticated` no ven ni escriben filas, y ninguna tabla tiene política de escritura salvo `revisiones` (solo revisores). Los `revoke` son una defensa adicional. Para terminar, ejecutar en el SQL Editor:
+
+```sql
+revoke all on registros_raw, cuarentena, revisores from anon, authenticated;
+grant select on revisores to authenticated;
+revoke insert, update, delete, truncate on museos, registros, registro_terminos, vocabulario,
+    normalizaciones, revisiones, embeddings, ejecuciones from anon, authenticated;
+grant insert on revisiones to authenticated;
+```
+
+Advisors → Security tras aplicar: solo quedan avisos informativos "RLS enabled, no policy" en `registros_raw` y `cuarentena`, que son intencionales (son privadas).
+
+Pendiente para el Sprint 3 (cola de revisión): en Authentication → Sign In / Providers, **desactivar los registros públicos** (los revisores se invitan a mano) y agregar su uid a la tabla `revisores`.
 
 ### 6.2 Ollama (ítem 7)
 

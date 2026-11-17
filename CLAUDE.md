@@ -106,7 +106,7 @@ Inicialmente se analizó la ficha `/registro/24-4` ("Mesa ratona") y la portada.
 
 ## 6. Estado
 
-- **Sprint 0:** ver `docs/sprint0.md` (pendientes del usuario: proyecto Supabase y prueba de modelos en Ollama).
+- **Sprint 0:** ver `docs/sprint0.md`. Supabase: proyecto `observatorio-surdoc` (ref `bksdjmwdvrxwtlniatbm`, `sa-east-1`) con esquema y RLS aplicados (faltan los `revoke`, §6.1). Pendiente del usuario: prueba de modelos en Ollama.
 
 ## 7. Decisiones pendientes
 

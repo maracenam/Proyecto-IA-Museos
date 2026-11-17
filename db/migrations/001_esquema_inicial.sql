@@ -3,7 +3,9 @@
 -- Idempotente: se puede ejecutar más de una vez sin error ni duplicados.
 -- Compatible con Postgres local (docker compose) y con Supabase.
 
-create extension if not exists vector;
+-- pgvector en su propio esquema (recomendación de seguridad de Supabase).
+create schema if not exists extensions;
+create extension if not exists vector with schema extensions;
 
 -- ---------------------------------------------------------------------------
 -- Referencia
@@ -153,7 +155,7 @@ create index if not exists revisiones_valor_idx on revisiones (surdoc_id, campo,
 create table if not exists embeddings (
     surdoc_id   text not null references registros (surdoc_id) on delete cascade,
     modelo      text not null,
-    vector      vector not null,
+    vector      extensions.vector not null,
     texto       text not null,
     fecha       timestamptz not null default now(),
     primary key (surdoc_id, modelo)
