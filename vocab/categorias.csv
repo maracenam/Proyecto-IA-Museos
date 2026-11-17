@@ -1,0 +1,31 @@
+campo,categoria,descripcion,palabras_clave
+material,lítico,"Piedra y rocas: obsidiana, basalto, sílex, cuarcita",piedra;piedras;litico;litica;liticos;obsidiana;basalto;silex;cuarcita;roca
+material,óseo,"Hueso, asta, marfil o diente de animal",hueso;huesos;oseo;osea;ballena;asta;cornamenta;marfil;diente
+material,madera,Madera y corteza,madera;maderas;corteza;tronco
+material,fibra vegetal,"Junco, junquillo, paja y otras fibras vegetales (cestería)",junquillo;junco;fibra vegetal;fibras vegetales;paja;vegetal;vegetales
+material,textil,"Lana, tela, terciopelo y fibras animales hiladas o tejidas",lana;tela;terciopelo;textil;algodon;fibras de animal
+material,cerámica,Arcilla cocida,ceramica;ceramico;arcilla;alfareria;pasta
+material,metal,"Metales y aleaciones",metal;metalico;metalica;bronce;hierro;cobre;alambre
+material,vidrio,Vidrio,vidrio
+material,malacológico,"Concha de molusco",concha;conchas;valva;malacologico;mejillon
+material,cuero,Cuero y piel animal,cuero;piel;tientos
+material,otro,No calza en ninguna categoría o no hay información suficiente,
+objeto,proyectil y arma,"Flechas, puntas, arcos, arpones y otras armas",flecha;punta;proyectil;arco;arpon;arma
+objeto,boleadora,"Boleadoras y sus bolas",boleadora;boleadoras;bola
+objeto,herramienta,"Instrumentos de trabajo: raspadores, lascas, cuchillos, punzones",herramienta;raspador;lasca;cuchillo;punzon;instrumento
+objeto,contenedor,"Recipientes: canastos, cestos, botellas, vasijas",canasto;cesto;botella;vasija;recipiente;contenedor
+objeto,adorno y vestuario,"Objetos de uso personal: collares, colgantes, sombreros, prendas",collar;colgante;adorno;sombrero;prenda;vestimenta
+objeto,embarcación,Canoas y otras embarcaciones,canoa;embarcacion
+objeto,fragmento,Fragmento de un objeto cuya función no se puede determinar,fragmento
+objeto,otro,No calza en ninguna categoría o no hay información suficiente,
+tecnica,tallado,Talla por percusión o presión en piedra o madera,tallado;tallada;talla
+tecnica,ahuecado,Vaciado del interior de una pieza,ahuecar;ahuecado
+tecnica,tejido,Tejido o cestería,tejido;tejida;trenzado
+tecnica,modelado,Modelado de cerámica,modelado
+tecnica,pulido,Pulido o alisado,pulido;alisado
+tecnica,otro,No calza en ninguna categoría o no hay información suficiente,
+estado_conservacion,Muy bueno,,
+estado_conservacion,Bueno,,
+estado_conservacion,Regular,,
+estado_conservacion,Malo,,
+estado_conservacion,otro,No calza en ninguna categoría,

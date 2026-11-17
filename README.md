@@ -6,6 +6,7 @@ Pipeline que convierte las fichas arqueológicas públicas de [SURDOC](https://w
 - Contexto y reglas del proyecto: [`CLAUDE.md`](CLAUDE.md)
 - Hallazgos del Sprint 0: [`docs/sprint0.md`](docs/sprint0.md)
 - Extracción (Sprint 1): [`docs/sprint1.md`](docs/sprint1.md)
+- Normalización (Sprint 2): [`docs/sprint2.md`](docs/sprint2.md)
 
 ## Estado
 
@@ -13,7 +14,7 @@ Pipeline que convierte las fichas arqueológicas públicas de [SURDOC](https://w
 |---|---|---|
 | 0 | Preparación y descubrimiento | Completo (modelo local: gemma2:2b) |
 | 1 | Extracción | Completo: 77/77 fichas, re-ejecución sin duplicados ([detalle](docs/sprint1.md)) |
-| 2 | Normalización | — |
+| 2 | Normalización | Código listo; falta la corrida con gemma2:2b y la muestra revisada ([detalle](docs/sprint2.md)) |
 | 3 | Dashboard y revisión (MVP) | — |
 | 4 | Búsqueda semántica | — |
 | 5 | Escala y portafolio | — |
@@ -31,6 +32,7 @@ uv sync                       # dependencias (Python 3.12)
 uv run ruff check .
 DATABASE_URL=postgresql://observatorio:observatorio@localhost:5432/observatorio uv run pytest
 uv run python -m pipeline.run --museo 16   # extrae las 77 fichas (~3 min)
+uv run python -m pipeline.normalize correr # reglas + LLM local (LLM_MODELO)
 ```
 
 Ollama, opcional en local: `docker compose --profile ia up -d`.

@@ -1,0 +1,35 @@
+campo,fuente_termino,id_termino,termino_preferido,sinonimos,termino_padre,categoria
+material,aat,300011176,Piedra,piedra;roca,,lítico
+material,tesauro_regional,3696,Obsidiana,obsidiana,Piedra,lítico
+material,aat,300011914,Madera,madera,,madera
+material,aat,300010797,Vidrio,vidrio,,vidrio
+material,aat,300010900,Metal,metal,,metal
+material,aat,300235507,Cerámica,cerámica;ceramica;arcilla cocida,,cerámica
+material,aat,300011845,Cuero (material animal),cuero;cuero (material animal),,cuero
+objeto,aat,300036998,Boleadora,boleadora;boleadoras,,boleadora
+objeto,aat,300217875,Bola,bola,Boleadora,boleadora
+objeto,tesauro_regional,3354,Bola (componente de boleadora),bola (componente de boleadora),Boleadora,boleadora
+objeto,aat,300036976,Flecha,flecha,,proyectil y arma
+objeto,tesauro_regional,351,Punta de flecha,punta de flecha,Flecha,proyectil y arma
+objeto,tesauro_regional,402,Proyectil (arqueológico y etnográfico),proyectil;punta de proyectil,,proyectil y arma
+objeto,aat,300036999,Arco (arma),arco (arma);arco,,proyectil y arma
+objeto,aat,300037011,Arpón,arpón;arpon,,proyectil y arma
+objeto,tesauro_regional,3303,Punta de arpón,punta de arpón;punta de arpon,Arpón,proyectil y arma
+objeto,aat,300024841,Herramienta,herramienta,,herramienta
+objeto,tesauro_regional,63,Raspador,raspador,Herramienta,herramienta
+objeto,aat,300265137,Lasca,lasca,Herramienta,herramienta
+objeto,tesauro_regional,2602,Canasto,canasto,,contenedor
+objeto,tesauro_regional,81,Cesto,cesto,,contenedor
+objeto,aat,300045627,Botella,botella,,contenedor
+objeto,aat,300046001,Collar (accesorio de vestir),collar;collar (accesorio de vestir),,adorno y vestuario
+objeto,aat,300046106,Sombrero,sombrero,,adorno y vestuario
+objeto,tesauro_regional,384,Canoa monóxila,canoa monóxila;canoa,,embarcación
+objeto,aat,300117130,Fragmento,fragmento,,fragmento
+objeto,observatorio,fragmento-ceramica,Fragmento (cerámica),fragmento (cerámica);fragmento cerámico,Fragmento,fragmento
+objeto,observatorio,fragmento-hueso,Fragmento de hueso,fragmento de hueso,Fragmento,fragmento
+tecnica,aat,300053149,Tallado,tallado;talla,,tallado
+tecnica,observatorio,ahuecar,Ahuecar,ahuecar;ahuecado,,ahuecado
+estado_conservacion,observatorio,muy-bueno,Muy bueno,muy bueno,,Muy bueno
+estado_conservacion,observatorio,bueno,Bueno,bueno,,Bueno
+estado_conservacion,observatorio,regular,Regular,regular,,Regular
+estado_conservacion,observatorio,malo,Malo,malo,,Malo
