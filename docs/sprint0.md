@@ -12,7 +12,7 @@ Estado del checklist de `CLAUDE.md` §6:
 | 4 | 5–10 fichas como fixtures | ✅ 10 fichas (⚠️ ninguna ficha de Magallanes está sin imagen) |
 | 5 | Postgres local + migraciones | ✅ `docker compose up -d` aplica las migraciones; probado con pytest |
 | 6 | Proyecto en Supabase + pgvector + RLS | ✅ Proyecto `observatorio-surdoc` creado, con RLS activa (falta un ajuste menor, ver §6.1) |
-| 7 | Ollama en el PC y comparación de modelos | ⏳ Pendiente: se corre en tu PC con `scripts/probar_modelos_ollama.py` |
+| 7 | Ollama en el PC y comparación de modelos | ✅ Elegido `gemma2:2b`: 9/10 aciertos, 0,8 s por valor, 100 % en GPU (§6.2) |
 | 8 | Documentar hallazgos | ✅ Este documento |
 
 ---
@@ -158,9 +158,21 @@ uv run python scripts/probar_modelos_ollama.py qwen2.5:3b llama3.2:3b gemma2:2b
 
 El script usa 10 casos reales de Magallanes (incluido el caso trampa `16-872`), mide aciertos, tiempo por valor y el porcentaje del modelo cargado en GPU, e imprime una tabla Markdown. Pega el resultado aquí abajo y elige el modelo. Las categorías del script son provisorias.
 
+**Resultado (17-11-2026, PC propio `DESKTOP-PKP439S`, Windows):**
+
 | Modelo | Aciertos | JSON inválido | Tiempo mediano / valor | Máximo | GPU |
 |---|---|---|---|---|---|
-| _(pendiente)_ | | | | | |
+| qwen2.5:3b | 7/10 | 0 | 0,7 s | 1,1 s | 100 % en GPU |
+| llama3.2:3b | 7/10 | 0 | 0,7 s | 0,9 s | 100 % en GPU |
+| **gemma2:2b** | **9/10** | 0 | 0,8 s | 0,9 s | 100 % en GPU |
+
+**Decisión: `gemma2:2b`** (`LLM_MODELO=gemma2:2b`). Es el que más acierta, resuelve bien el caso trampa (`16-872`: cerámica declarada como madera; llama3.2 cae en él) y es el más pequeño. Los tres caben enteros en la GPU y tardan menos de 1 s por valor: normalizar las 77 fichas toma alrededor de un minuto, así que la velocidad no es un problema.
+
+Lecturas para el Sprint 2:
+
+- **Los tres fallan `16-1073`** (canasto tejido con junquillo): responden "textil" en vez de "fibra vegetal". No es un error del modelo sino una ambigüedad del vocabulario: "textil" mezcla material y técnica. Las categorías deben definirse con la arqueóloga (¿material = fibra vegetal y técnica = cestería?) antes de escribir el prompt definitivo.
+- **La confianza que reporta el LLM no sirve tal cual:** llama3.2 dio 0,9 a respuestas equivocadas y qwen2.5 dio 1,0 a un error. Confirma que el umbral debe calibrarse contra la muestra revisada a mano y no usarse en bruto.
+- **Muestra pequeña:** 10 casos alcanzan para descartar modelos y medir velocidad, no para estimar la precisión real. Esa medición (50 valores por campo) es parte del Sprint 2.
 
 ## 7. Cómo verificar este sprint
 

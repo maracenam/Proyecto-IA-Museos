@@ -221,4 +221,4 @@ El riesgo principal está en la fuente: si SURDOC no permite filtrar bien o camb
 - [ ] ¿Podemos contar con la arqueóloga para validar el vocabulario y la muestra de revisión?
 - [ ] ¿El repositorio será público desde el inicio o solo al cerrar el MVP?
 - [ ] ¿Qué categorías del observatorio agrupan los términos AAT? Conviene definirlas con la arqueóloga.
-- [ ] ¿Qué modelo local se usa? Se decide en el Sprint 0 comparando calidad y velocidad en el computador disponible.
+- [x] ¿Qué modelo local se usa? **`gemma2:2b`**: 9/10 aciertos y 0,8 s por valor en la GPU del PC propio (comparado con qwen2.5:3b y llama3.2:3b; ver `docs/sprint0.md`).

@@ -10,7 +10,7 @@ Pipeline que convierte las fichas arqueológicas públicas de [SURDOC](https://w
 
 | Sprint | Objetivo | Estado |
 |---|---|---|
-| 0 | Preparación y descubrimiento | En curso: falta Supabase y elegir el modelo local |
+| 0 | Preparación y descubrimiento | Completo (modelo local: gemma2:2b) |
 | 1 | Extracción | — |
 | 2 | Normalización | — |
 | 3 | Dashboard y revisión (MVP) | — |

@@ -106,7 +106,7 @@ Inicialmente se analizó la ficha `/registro/24-4` ("Mesa ratona") y la portada.
 
 ## 6. Estado
 
-- **Sprint 0:** ver `docs/sprint0.md`. Supabase: proyecto `observatorio-surdoc` (ref `bksdjmwdvrxwtlniatbm`, `sa-east-1`) con esquema y RLS aplicados (faltan los `revoke`, §6.1). Pendiente del usuario: prueba de modelos en Ollama.
+- **Sprint 0:** completo, ver `docs/sprint0.md`. Supabase: proyecto `observatorio-surdoc` (ref `bksdjmwdvrxwtlniatbm`, `sa-east-1`) con esquema y RLS aplicados (faltan los `revoke`, §6.1). Modelo local elegido: `gemma2:2b` (9/10 aciertos, 0,8 s por valor en GPU).
 
 ## 7. Decisiones pendientes
 
@@ -114,5 +114,4 @@ Inicialmente se analizó la ficha `/registro/24-4` ("Mesa ratona") y la portada.
 - Qué museos se suman en el Sprint 5.
 - Si la arqueóloga puede validar el vocabulario y la muestra de revisión.
 - Si el repositorio es público desde el inicio o al cerrar el MVP.
-- Qué categorías del observatorio agrupan los términos AAT / Tesauro Regional (definir con la arqueóloga).
-- Qué modelo local se usa (se decide con `scripts/probar_modelos_ollama.py`).
+- Qué categorías del observatorio agrupan los términos AAT / Tesauro Regional (definir con la arqueóloga). Ojo: "textil" vs "fibra vegetal" confundió a los tres modelos probados (cestería).
