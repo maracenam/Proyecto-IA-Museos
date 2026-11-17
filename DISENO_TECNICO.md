@@ -129,6 +129,8 @@ Once tablas organizadas en capas: lo extraído en bruto nunca se modifica, y cad
 | `embeddings`        | Oro        | `surdoc_id` + `modelo`                             | vector (pgvector), texto usado para generarlo                                                                                                                                                                                                                                  |
 | `ejecuciones`       | Auditoría  | `id`                                               | tipo de proceso, inicio, fin, registros procesados, en cuarentena, dados de baja, errores, versión del código                                                                                                                                                                  |
 
+Además, `categorias` (categorías válidas por campo, copiadas de `vocab/`) y `parametros` (umbral de confianza) dan soporte a la app y a la revisión; una corrección solo puede ser una categoría existente.
+
 Una vista `valor_vigente` entrega el valor final de cada campo: si existe una revisión humana, gana siempre; si no, se usa la normalización de la última versión de prompt. Así, cambiar el prompt nunca borra el trabajo del revisor.
 
 La tabla `ejecuciones` deja un registro auditable de cada corrida del pipeline: qué se procesó, cuándo y con qué versión.

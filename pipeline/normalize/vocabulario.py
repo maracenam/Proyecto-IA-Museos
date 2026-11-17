@@ -94,6 +94,9 @@ class Vocabulario:
             raise KeyError(f"No hay categorías para el campo {campo!r}")
         return self._categorias[campo]
 
+    def todas_las_categorias(self) -> list[Categoria]:
+        return [c for lista in self._categorias.values() for c in lista]
+
     def nombres_categoria(self, campo: str) -> list[str]:
         return [c.nombre for c in self.categorias(campo)]
 
@@ -138,5 +141,11 @@ def sincronizar_vocabulario(con: psycopg.Connection, vocab: Vocabulario) -> int:
                 )
                 for t in vocab.terminos
             ],
+        )
+        # Categorías válidas: la base rechaza correcciones fuera de esta lista (migración 006).
+        cur.executemany(
+            """insert into categorias (campo, categoria, descripcion) values (%s, %s, %s)
+               on conflict (campo, categoria) do update set descripcion = excluded.descripcion""",
+            [(c.campo, c.nombre, c.descripcion) for c in vocab.todas_las_categorias()],
         )
     return len(vocab.terminos)

@@ -1,0 +1,13 @@
+[theme]
+primaryColor = "#1f5f7a"
+backgroundColor = "#f6f8f9"
+secondaryBackgroundColor = "#e6ecef"
+textColor = "#17232b"
+font = "sans serif"
+
+[browser]
+gatherUsageStats = false
+
+[client]
+# Oculta el menú de desarrollo ("Deploy") a quienes visitan la app.
+toolbarMode = "viewer"

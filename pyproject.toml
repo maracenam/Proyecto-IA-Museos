@@ -13,6 +13,11 @@ dependencies = [
 ]
 
 [dependency-groups]
+app = [
+    "pandas>=2.2",
+    "plotly>=5.24",
+    "streamlit>=1.40",
+]
 dev = [
     "pytest>=8.0",
     "ruff>=0.6",
@@ -20,6 +25,8 @@ dev = [
 
 [tool.uv]
 package = false
+# La app (Streamlit) se instala también en desarrollo y CI para poder probarla.
+default-groups = ["dev", "app"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
@@ -31,3 +38,7 @@ target-version = "py312"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B"]
+
+[tool.ruff.lint.isort]
+# Los módulos de app/ se importan por nombre (Streamlit agrega app/ al path).
+known-first-party = ["pipeline", "tests", "comun", "datos", "logica"]
