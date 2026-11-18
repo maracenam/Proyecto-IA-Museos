@@ -1,8 +1,21 @@
-"""Conexión y lectura con caché compartidas por las páginas."""
+"""Conexión, lectura con caché y piezas de interfaz compartidas por las páginas."""
+
+import logging
 
 import streamlit as st
 
 from datos import FuenteDatos, crear_fuente, leer_config
+from logica import DESCRIPCION_ESTADOS
+
+log = logging.getLogger(__name__)
+
+# Colores de validación: los mismos en gráficos, leyenda y tarjetas.
+COLORES_ESTADO = {
+    "Revisado": "#5d6f2c",
+    "Propuesto": "#1f5f7a",
+    "En revisión": "#b06a12",
+    "Sin normalizar": "#8d99a1",
+}
 
 
 def _secretos() -> dict:
@@ -18,12 +31,46 @@ def fuente() -> FuenteDatos:
 
 
 @st.cache_data(ttl=300, show_spinner="Cargando datos…")
-def leer(vista: str) -> list[dict]:
+def _leer(vista: str) -> list[dict]:
     return fuente().leer(vista)
 
 
+def leer(vista: str) -> list[dict]:
+    """Lee una vista; si la base no responde, muestra un aviso con reintento en vez del error
+    técnico y detiene la página."""
+    try:
+        return _leer(vista)
+    except Exception:
+        log.exception("No se pudo leer %s", vista)
+        st.error(
+            "No pudimos conectar con la base de datos en este momento. "
+            "Suele resolverse en unos segundos."
+        )
+        if st.button("Reintentar", type="primary", key=f"reintentar|{vista}"):
+            _leer.clear()
+            st.rerun()
+        st.stop()
+
+
 def refrescar() -> None:
-    leer.clear()
+    _leer.clear()
+
+
+def leyenda_validacion(estados: list[str] | None = None) -> None:
+    """Leyenda única de los estados de validación (los gráficos no repiten la suya)."""
+    estados = estados or list(COLORES_ESTADO)
+    piezas = [
+        f'<span style="display:inline-block;margin-right:1.1rem">'
+        f'<span style="white-space:nowrap"><span style="display:inline-block;width:.7rem;'
+        f"height:.7rem;border-radius:2px;background:{COLORES_ESTADO[e]};margin-right:.4rem;"
+        f'vertical-align:-1px"></span><b>{e}</b></span> '
+        f'<span style="color:#5b6b75">· {DESCRIPCION_ESTADOS[e]}</span></span>'
+        for e in estados
+    ]
+    st.markdown(
+        f'<div style="font-size:.86rem;line-height:1.9">{"".join(piezas)}</div>',
+        unsafe_allow_html=True,
+    )
 
 
 def pie() -> None:

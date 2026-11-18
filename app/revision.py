@@ -12,7 +12,7 @@ import streamlit as st
 
 from comun import fuente, leer, pie, refrescar
 from datos import ErrorEscritura, ErrorSesion
-from logica import NOMBRES_CAMPO
+from logica import NOMBRES_CAMPO, NOMBRES_METODO, coma
 
 POR_PAGINA = 10
 
@@ -41,7 +41,8 @@ if sesion is None:
     st.stop()
 
 arriba = st.columns([4, 1])
-arriba[0].caption(f"Sesión iniciada como {sesion.correo}")
+# Texto plano: en markdown, Streamlit convierte los correos en enlaces mailto.
+arriba[0].text(f"Sesión iniciada como {sesion.correo}")
 if arriba[1].button("Cerrar sesión"):
     st.session_state.pop("sesion")
     st.rerun()
@@ -202,14 +203,27 @@ def mostrar_muestra() -> None:
 # --- Pestaña: cola de revisión ---
 
 
+def motivo(item: dict) -> str:
+    """Por qué un valor está en la cola, en palabras de quien revisa."""
+    if item["valor_propuesto"] == "otro":
+        return "El sistema no encontró una categoría que calce."
+    if "La descripción sugiere" in (item["justificacion"] or ""):
+        sugerida = item["justificacion"].split("La descripción sugiere", 1)[1].split(":")[0].strip()
+        return f"Lo declarado en SURDOC no calza con la descripción, que sugiere {sugerida}."
+    return f"Confianza baja ({coma(item['confianza'])})."
+
+
 def mostrar_cola() -> None:
     st.markdown(
-        "Valores con confianza baja, sin categoría ('otro') o que contradicen la descripción."
+        "Valores con confianza baja, sin categoría o que contradicen la descripción de la ficha."
     )
     cola = leer("cola_revision")
     if not cola:
-        st.success("No hay valores pendientes de revisión.")
+        st.success("No quedan valores pendientes de revisión.")
         return
+    imagenes = {
+        f["surdoc_id"]: (f["url_imagen"], f["credito_imagen"]) for f in leer("fichas_publicas")
+    }
     campos = sorted({c["campo"] for c in cola}, key=list(NOMBRES_CAMPO).index)
     elegidos = st.multiselect(
         "Campos", campos, default=campos, format_func=nombre_campo, key="r_campos"
@@ -218,55 +232,47 @@ def mostrar_cola() -> None:
         (c for c in cola if c["campo"] in elegidos),
         key=lambda c: (c["metodo"] != "llm" or c["confianza"] > 0, c["confianza"]),
     )
+    paginas = max(1, -(-len(pendientes) // POR_PAGINA))
     st.caption(f"{len(pendientes)} valores pendientes")
-    pagina = st.number_input(
-        "Página", 1, max(1, -(-len(pendientes) // POR_PAGINA)), 1, key="r_pagina"
+    pagina = (
+        st.number_input("Página", 1, paginas, 1, key="r_pagina") if paginas > 1 else 1
     )  # fmt: skip
 
     for item in pendientes[(pagina - 1) * POR_PAGINA : pagina * POR_PAGINA]:
         clave = f"{item['surdoc_id']}|{item['campo']}|{item['orden']}"
+        url, credito = imagenes.get(item["surdoc_id"], (None, None))
         with st.container(border=True):
-            izquierda, derecha = st.columns([3, 2])
-            with izquierda:
-                st.markdown(
-                    f"**{item['objeto'] or 'Sin objeto'}** · `{item['surdoc_id']}` · "
-                    f"{nombre_campo(item['campo'])}"
+            st.caption(nombre_campo(item["campo"]))
+            contexto_ficha({**item, "url_imagen": url, "credito_imagen": credito})
+            metodo = NOMBRES_METODO.get(item["metodo"], item["metodo"])
+            if item["modelo"]:
+                metodo += f" · {item['modelo']}"
+            st.markdown(f"### El sistema propone: **{item['valor_propuesto']}**")
+            st.caption(f"{motivo(item)} Propuesto por: {metodo}.")
+            opciones = categorias.get(item["campo"], [item["valor_propuesto"]])
+            inicial = (
+                opciones.index(item["valor_propuesto"])
+                if item["valor_propuesto"] in opciones
+                else 0
+            )
+            seleccion, boton = st.columns([3, 1], vertical_alignment="bottom")
+            valor = seleccion.selectbox(
+                "Valor correcto", opciones, index=inicial, key=f"sel|{clave}"
+            )
+            if boton.button(
+                "Guardar revisión", key=f"btn|{clave}", type="primary", use_container_width=True
+            ):
+                guardar(
+                    lambda item=item, valor=valor: fuente().guardar_revision(
+                        sesion,
+                        item["surdoc_id"],
+                        item["campo"],
+                        item["orden"],
+                        item["valor_propuesto"],
+                        valor,
+                    ),  # fmt: skip
+                    f"Revisión guardada: {item['surdoc_id']} → {valor}",
                 )
-                st.write(item["descripcion"] or "Sin descripción.")
-                st.markdown(f"[Ver ficha en SURDOC]({item['url_ficha']})")
-            with derecha:
-                origen = (
-                    "inferido de la descripción"
-                    if item["origen"] == "descripcion"
-                    else item["entrada"]
-                )
-                st.markdown(
-                    f"**Declarado:** {origen}  \n"
-                    f"**Propuesta:** {item['valor_propuesto']} · "
-                    f"confianza {item['confianza']:.2f}  \n"
-                    f"**Método:** {item['metodo']}"
-                    + (f" ({item['modelo']})" if item["modelo"] else "")
-                )
-                st.caption(item["justificacion"] or "")
-                opciones = categorias.get(item["campo"], [item["valor_propuesto"]])
-                inicial = (
-                    opciones.index(item["valor_propuesto"])
-                    if item["valor_propuesto"] in opciones
-                    else 0
-                )
-                valor = st.selectbox("Valor correcto", opciones, index=inicial, key=f"sel|{clave}")
-                if st.button("Guardar revisión", key=f"btn|{clave}", type="primary"):
-                    guardar(
-                        lambda item=item, valor=valor: fuente().guardar_revision(
-                            sesion,
-                            item["surdoc_id"],
-                            item["campo"],
-                            item["orden"],
-                            item["valor_propuesto"],
-                            valor,
-                        ),  # fmt: skip
-                        f"Revisión guardada: {item['surdoc_id']} → {valor}",
-                    )
 
 
 pestana_muestra, pestana_cola = st.tabs(["Muestra de calidad", "Cola de revisión"])

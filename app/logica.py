@@ -2,10 +2,18 @@
 
 import pandas as pd
 
+# Etiquetas cortas: se repiten en cada fila de la tabla y en los gráficos; el significado
+# completo se explica una vez en la leyenda.
 ESTADOS = {
-    "revisado": "Revisado por persona",
-    "propuesto": "Propuesto por el sistema",
+    "revisado": "Revisado",
+    "propuesto": "Propuesto",
     "en_revision": "En revisión",
+}
+DESCRIPCION_ESTADOS = {
+    "Revisado": "validado por una persona",
+    "Propuesto": "por el vocabulario o la IA local, con confianza suficiente",
+    "En revisión": "confianza baja, sin categoría o en conflicto con la descripción",
+    "Sin normalizar": "aún no procesado",
 }
 ORDEN_ESTADOS = list(ESTADOS.values())
 CAMPOS_TABLA = {"objeto": "tipo", "material": "material", "estado_conservacion": "conservacion"}
@@ -81,6 +89,19 @@ def filtrar(
         )  # fmt: skip
         filtro &= unido.str.contains(buscado, regex=False)
     return df[filtro]
+
+
+def orden_categorias(conteo: pd.DataFrame, columna: str) -> list[str]:
+    """Categorías de mayor a menor; "otro" y "Sin normalizar" siempre al final, porque no son
+    categorías comparables sino ausencia de una."""
+    totales = conteo.groupby(columna)["Fichas"].sum().sort_values(ascending=False)
+    al_final = [c for c in ("otro", SIN_DATO) if c in totales.index]
+    return [c for c in totales.index if c not in al_final] + al_final
+
+
+def coma(valor: float, decimales: int = 2) -> str:
+    """Número con coma decimal, como se escribe en Chile."""
+    return f"{valor:.{decimales}f}".replace(".", ",")
 
 
 def conteo_por_estado(df: pd.DataFrame, columna: str) -> pd.DataFrame:

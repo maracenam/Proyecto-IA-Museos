@@ -1,11 +1,15 @@
 """Página pública: búsqueda en lenguaje natural (Sprint 4)."""
 
+import logging
+
 import streamlit as st
 
 from busqueda import MODELO_POR_DEFECTO, vector_consulta
 from comun import fuente, leer, pie
 from datos import leer_config
-from logica import ESTADOS
+from logica import ESTADOS, coma
+
+log = logging.getLogger(__name__)
 
 EJEMPLOS = [
     "instrumento de piedra para raspar cueros",
@@ -23,32 +27,44 @@ st.markdown(
     "abierto."
 )
 
-if "consulta" not in st.session_state:
-    st.session_state["consulta"] = ""
+st.session_state.setdefault("consulta", "")
 
-columnas = st.columns(len(EJEMPLOS))
-for columna, ejemplo in zip(columnas, EJEMPLOS, strict=True):
-    if columna.button(ejemplo, key=f"ej|{ejemplo}", use_container_width=True):
-        st.session_state["consulta"] = ejemplo
 
-with st.form("buscar"):
-    consulta = st.text_input(
-        "Consulta", key="consulta", placeholder="Ej.: herramientas de piedra para cazar"
+def usar_ejemplo() -> None:
+    elegido = st.session_state.get("ejemplo")
+    if elegido:
+        st.session_state["consulta"] = elegido
+
+
+with st.form("buscar", border=False):
+    entrada, boton = st.columns([5, 1], vertical_alignment="bottom")
+    consulta = entrada.text_input(
+        "¿Qué buscas?", key="consulta", placeholder="Ej.: herramientas de piedra para cazar"
     )
-    st.form_submit_button("Buscar", type="primary")
+    boton.form_submit_button("Buscar", type="primary", use_container_width=True)
+st.pills("O prueba un ejemplo", EJEMPLOS, key="ejemplo", on_change=usar_ejemplo)
 
-if not consulta.strip():
-    st.caption("Prueba con uno de los ejemplos de arriba.")
+consulta = consulta.strip()
+if not consulta:
     pie()
     st.stop()
 
 modelo = leer_config().get("EMBEDDING_MODELO") or MODELO_POR_DEFECTO
-resultados = fuente().buscar(vector_consulta(consulta.strip(), modelo), modelo, RESULTADOS)
+try:
+    resultados = fuente().buscar(vector_consulta(consulta, modelo), modelo, RESULTADOS)
+except Exception:
+    log.exception("Falló la búsqueda")
+    st.error(
+        "La búsqueda no está disponible en este momento. Intenta de nuevo en unos minutos; "
+        "mientras tanto puedes filtrar las fichas en la página Colección."
+    )
+    pie()
+    st.stop()
 
 if not resultados:
-    st.warning(
-        "No hay fichas indexadas para la búsqueda todavía. Genera los embeddings con "
-        "`python -m pipeline.embed generar`."
+    st.info(
+        "La búsqueda todavía no tiene fichas indexadas. Aparecerán después de generar los "
+        "embeddings (`python -m pipeline.embed generar`)."
     )
     pie()
     st.stop()
@@ -59,37 +75,40 @@ for v in leer("valor_vigente"):
     if v["campo"] in ("objeto", "material") and v["orden"] == 0:
         valores.setdefault(v["surdoc_id"], []).append(v)
 
-st.caption(f"{len(resultados)} fichas más parecidas a «{consulta.strip()}»")
+
+def etiqueta(v: dict) -> str:
+    campo = "Tipo" if v["campo"] == "objeto" else "Material"
+    valor = "sin categoría" if v["valor"] == "otro" else v["valor"]
+    return f"{campo}: **{valor}** ({ESTADOS[v['estado']].lower()})"
+
+
+st.caption(f"Las {len(resultados)} fichas más parecidas a «{consulta}»")
 for posicion, r in enumerate(resultados, 1):
     ficha = fichas.get(r["surdoc_id"])
     if ficha is None:
         continue
     with st.container(border=True):
-        texto, imagen = st.columns([4, 1])
+        texto, imagen = st.columns([4, 1], gap="medium")
         with texto:
             st.markdown(
-                f"**{posicion}. {ficha['objeto'] or 'Sin objeto'}** · `{ficha['surdoc_id']}` · "
-                f"parecido {r['similitud']:.2f}".replace(".", ",")
+                f"**{posicion}. {ficha['objeto'] or 'Sin objeto'}** · `{ficha['surdoc_id']}`"
             )
-            etiquetas = [
-                f"{'Tipo' if v['campo'] == 'objeto' else 'Material'}: **{v['valor']}** "
-                f"({ESTADOS[v['estado']].lower()})"
-                for v in sorted(
-                    valores.get(r["surdoc_id"], []), key=lambda v: v["campo"] != "objeto"
-                )
-            ]
-            if etiquetas:
-                st.markdown(" · ".join(etiquetas))
-            descripcion = ficha["descripcion"] or "Sin descripción."
+            propias = sorted(valores.get(r["surdoc_id"], []), key=lambda v: v["campo"] != "objeto")
+            if propias:
+                st.markdown(" · ".join(etiqueta(v) for v in propias))
+            descripcion = ficha["descripcion"] or "Sin descripción en SURDOC."
             st.write(descripcion[:300] + ("…" if len(descripcion) > 300 else ""))
-            st.markdown(f"[Ver ficha en SURDOC]({ficha['url_ficha']})")
+            st.markdown(
+                f"[Ver ficha en SURDOC]({ficha['url_ficha']}) · "
+                f"<span style='color:#5b6b75'>parecido {coma(r['similitud'])}</span>",
+                unsafe_allow_html=True,
+            )
         with imagen:
             if ficha["url_imagen"]:
                 st.image(ficha["url_imagen"], caption=ficha["credito_imagen"] or None)
 
 st.caption(
-    "El parecido va de 0 a 1 y es relativo: sirve para ordenar, no como medida absoluta. "
-    "Los 10 casos de prueba del proyecto encuentran al menos una ficha pertinente entre los "
-    "5 primeros resultados."
+    "El parecido va de 0 a 1 y sirve para ordenar, no como medida absoluta. En las 10 consultas "
+    "de prueba del proyecto, al menos una ficha pertinente aparece entre los 5 primeros resultados."
 )
 pie()

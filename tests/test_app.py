@@ -207,7 +207,7 @@ def test_tabla_indicadores_y_filtros(bd_app):
     df = tabla_fichas(fichas, valores)
     assert list(df["surdoc_id"]) == ["16-447", "16-872", "16-919", "16-924", "16-1771", "16-3366"]
     canoa = df.set_index("surdoc_id").loc["16-447"]
-    assert (canoa["tipo"], canoa["tipo_estado"]) == ("embarcación", "Propuesto por el sistema")
+    assert (canoa["tipo"], canoa["tipo_estado"]) == ("embarcación", "Propuesto")
     ind = indicadores(fichas, valores)
     assert ind["fichas"] == 6 and ind["valores"] == ind["propuestos"] + ind["en_revision"]
     assert len(filtrar(df, texto="canoa")) == 1
