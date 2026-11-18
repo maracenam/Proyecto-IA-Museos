@@ -11,6 +11,7 @@ st.set_page_config(
 navegacion = st.navigation(
     [
         st.Page("inicio.py", title="Colección", icon=":material/inventory_2:", default=True),
+        st.Page("buscar.py", title="Buscar", icon=":material/search:", url_path="buscar"),
         st.Page("revision.py", title="Revisión", icon=":material/fact_check:", url_path="revision"),
         st.Page("acerca.py", title="Método y fuentes", icon=":material/info:", url_path="metodo"),
     ]

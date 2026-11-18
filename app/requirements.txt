@@ -3,3 +3,7 @@ streamlit>=1.40
 plotly>=5.24
 pandas>=2.2
 httpx>=0.27
+# Búsqueda semántica: PyTorch solo para CPU (la versión con CUDA pesa más de 2 GB).
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch>=2.4
+sentence-transformers>=3.0

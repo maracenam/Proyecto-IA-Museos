@@ -8,6 +8,7 @@ Pipeline que convierte las fichas arqueológicas públicas de [SURDOC](https://w
 - Extracción (Sprint 1): [`docs/sprint1.md`](docs/sprint1.md)
 - Normalización (Sprint 2): [`docs/sprint2.md`](docs/sprint2.md)
 - Dashboard y revisión (Sprint 3): [`docs/sprint3.md`](docs/sprint3.md)
+- Búsqueda semántica (Sprint 4): [`docs/sprint4.md`](docs/sprint4.md)
 
 ## Estado
 
@@ -17,7 +18,7 @@ Pipeline que convierte las fichas arqueológicas públicas de [SURDOC](https://w
 | 1 | Extracción | Completo: 77/77 fichas, re-ejecución sin duplicados ([detalle](docs/sprint1.md)) |
 | 2 | Normalización | Código listo; falta la corrida con gemma2:2b y la muestra revisada ([detalle](docs/sprint2.md)) |
 | 3 | Dashboard y revisión (MVP) | App lista y probada; falta desplegarla en Streamlit Cloud ([detalle](docs/sprint3.md)) |
-| 4 | Búsqueda semántica | — |
+| 4 | Búsqueda semántica | Lista: 10/10 consultas de prueba con acierto en el top 5 ([detalle](docs/sprint4.md)) |
 | 5 | Escala y portafolio | — |
 
 MVP: Museo Regional de Magallanes, clasificación Antropología, Arqueología y Etnografía (77 fichas).
@@ -34,7 +35,8 @@ uv run ruff check .
 DATABASE_URL=postgresql://observatorio:observatorio@localhost:5432/observatorio uv run pytest
 uv run python -m pipeline.run --museo 16   # extrae las 77 fichas (~3 min)
 uv run python -m pipeline.normalize correr # reglas + LLM local (LLM_MODELO)
-uv run streamlit run app/app.py            # app: colección, revisión y método
+uv run --group embed python -m pipeline.embed generar  # embeddings para la búsqueda
+uv run --group embed streamlit run app/app.py           # app: colección, búsqueda, revisión y método
 ```
 
 Ollama, opcional en local: `docker compose --profile ia up -d`.

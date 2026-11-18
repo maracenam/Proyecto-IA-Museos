@@ -112,6 +112,7 @@ Inicialmente se analizó la ficha `/registro/24-4` ("Mesa ratona") y la portada.
 - **Sprint 1:** completo, ver `docs/sprint1.md`. `python -m pipeline.run --museo 16` carga las 77 fichas (bronce y plata) en ~3 min; re-ejecutar no duplica. Datos aún solo en Postgres local: cargar en Supabase requiere la cadena de conexión.
 - **Sprint 2:** código listo, ver `docs/sprint2.md`. `python -m pipeline.normalize correr|muestra|metricas`. Reglas resuelven 182 de 236 valores; los 54 restantes van a gemma2:2b. Pendiente en el PC del usuario: corrida con Ollama, revisión humana de la muestra (50 material + 50 objeto) y umbral calibrado. Vocabulario provisorio en `vocab/` (validar con la arqueóloga).
 - **Sprint 3:** app lista, ver `docs/sprint3.md`. `streamlit run app/app.py` (páginas: Colección, Revisión, Método y fuentes). Vistas `valor_vigente`, `fichas_publicas`, `cola_revision` con `security_invoker`. La app solo usa la clave anon; revisar exige sesión de Supabase Auth y estar en `revisores`. Pendiente del usuario: desplegar en Streamlit Cloud, crear la cuenta de la revisora y desactivar el registro público en Supabase Auth.
+- **Sprint 4:** listo, ver `docs/sprint4.md`. Modelo de embeddings `intfloat/multilingual-e5-small` (10/10 consultas de prueba con acierto en el top 5, precisión@5 0,68). `python -m pipeline.embed generar|evaluar` (grupo `embed`, PyTorch CPU). Función `buscar_fichas` en Supabase; página Buscar en la app. Pendiente: generar embeddings en Supabase y confirmar memoria en Streamlit Cloud (~1 GB en local).
 
 ## 7. Decisiones pendientes
 

@@ -35,6 +35,8 @@ class Sesion:
 class FuenteDatos(Protocol):
     def leer(self, vista: str) -> list[dict]: ...
 
+    def buscar(self, vector: str, modelo: str, limite: int = 10) -> list[dict]: ...
+
     def iniciar_sesion(self, correo: str, clave: str) -> Sesion: ...
 
     def guardar_revision(
@@ -56,6 +58,16 @@ class FuenteSupabase:
             raise ValueError(f"Vista desconocida: {vista}")
         respuesta = self._http.get(
             f"/rest/v1/{vista}", params={"select": "*"}, headers=self._cabeceras()
+        )
+        respuesta.raise_for_status()
+        return respuesta.json()
+
+    def buscar(self, vector: str, modelo: str, limite: int = 10) -> list[dict]:
+        """Llama a la función buscar_fichas (RPC) con la clave pública."""
+        respuesta = self._http.post(
+            "/rest/v1/rpc/buscar_fichas",
+            json={"consulta": vector, "modelo_busqueda": modelo, "limite": limite},
+            headers=self._cabeceras(),
         )
         respuesta.raise_for_status()
         return respuesta.json()
@@ -140,6 +152,19 @@ class FuentePostgres:
             for f in filas
         ]
 
+    def buscar(self, vector: str, modelo: str, limite: int = 10) -> list[dict]:
+        with (
+            self.con.transaction(),
+            self.con.cursor(row_factory=self._psycopg.rows.dict_row) as cur,
+        ):
+            self._como("anon")
+            filas = cur.execute(
+                "select * from buscar_fichas(%s::extensions.vector, %s, %s)",
+                (vector, modelo, limite),
+            ).fetchall()
+            self._restaurar()
+        return filas
+
     def iniciar_sesion(self, correo: str, clave: str) -> Sesion:
         if not self.correo_revisor or not self.id_revisor or correo != self.correo_revisor:
             raise ErrorSesion("Correo o contraseña incorrectos.")
@@ -181,6 +206,6 @@ def crear_fuente(config: dict[str, str | None]) -> FuenteDatos:
 
 def leer_config(secretos: dict | None = None) -> dict[str, str | None]:
     claves = ("SUPABASE_URL", "SUPABASE_ANON_KEY", "DATABASE_URL",
-              "REVISOR_LOCAL_CORREO", "REVISOR_LOCAL_ID")  # fmt: skip
+              "REVISOR_LOCAL_CORREO", "REVISOR_LOCAL_ID", "EMBEDDING_MODELO")  # fmt: skip
     secretos = secretos or {}
     return {k: secretos.get(k) or os.environ.get(k) for k in claves}

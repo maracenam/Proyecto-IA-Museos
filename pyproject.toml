@@ -22,6 +22,10 @@ dev = [
     "pytest>=8.0",
     "ruff>=0.6",
 ]
+embed = [
+    "sentence-transformers>=3.0",
+    "torch>=2.4",
+]
 
 [tool.uv]
 package = false
@@ -32,6 +36,16 @@ default-groups = ["dev", "app"]
 testpaths = ["tests"]
 pythonpath = ["."]
 
+# PyTorch solo para CPU: los embeddings de 77 fichas no necesitan GPU y la versión con
+# CUDA pesa más de 2 GB (también en Streamlit Cloud).
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
+
+[tool.uv.sources]
+torch = [{ index = "pytorch-cpu" }]
+
 [tool.ruff]
 line-length = 100
 target-version = "py312"
@@ -41,4 +55,4 @@ select = ["E", "F", "I", "UP", "B"]
 
 [tool.ruff.lint.isort]
 # Los módulos de app/ se importan por nombre (Streamlit agrega app/ al path).
-known-first-party = ["pipeline", "tests", "comun", "datos", "logica"]
+known-first-party = ["pipeline", "tests", "comun", "datos", "logica", "busqueda"]
