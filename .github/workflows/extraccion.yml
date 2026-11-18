@@ -1,0 +1,50 @@
+name: extraccion
+
+# Extracción incremental de SURDOC cada 3 días (y a mano desde la pestaña Actions).
+# Mantiene activa la base de Supabase (el plan gratuito la pausa tras 7 días sin uso).
+# Si el paso falla (código distinto de 0), GitHub avisa por correo a quien configuró el
+# workflow, según Settings → Notifications → Actions.
+on:
+  schedule:
+    - cron: "37 9 */3 * *" # 09:37 UTC (06:37 en Chile): días 1, 4, 7… de cada mes
+  workflow_dispatch:
+    inputs:
+      museo:
+        description: "Código de institución (vacío = todos los museos de la tabla museos)"
+        required: false
+
+concurrency:
+  group: extraccion
+  cancel-in-progress: false
+
+jobs:
+  extraer:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      DATABASE_URL: ${{ secrets.SUPABASE_DATABASE_URL }}
+      SURDOC_USER_AGENT: ${{ vars.SURDOC_USER_AGENT }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      - name: Verificar configuración
+        run: |
+          if [ -z "$DATABASE_URL" ]; then
+            echo "::error::Falta el secret SUPABASE_DATABASE_URL (ver docs/sprint5.md)"; exit 1
+          fi
+          if [ -z "$SURDOC_USER_AGENT" ]; then
+            echo "::error::Falta la variable SURDOC_USER_AGENT (ver docs/sprint5.md)"; exit 1
+          fi
+      - name: Instalar dependencias del pipeline
+        run: uv sync --no-default-groups
+      - name: Extraer
+        env:
+          MUSEO: ${{ github.event.inputs.museo }} # por variable, nunca interpolado en el script
+        run: |
+          if [ -z "$MUSEO" ]; then
+            uv run python -m pipeline.run --todos
+          elif [[ "$MUSEO" =~ ^[0-9]+$ ]]; then
+            uv run python -m pipeline.run --museo "$MUSEO"
+          else
+            echo "::error::El código de museo debe ser un número"; exit 1
+          fi
