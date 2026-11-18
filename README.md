@@ -99,7 +99,7 @@ Para sumar un museo basta con agregarlo a la tabla `museos`: la extracción prog
 | 4 | Búsqueda semántica | ✅ [docs/sprint4.md](docs/sprint4.md) |
 | 5 | Escala y portafolio | Automatización lista; museos adicionales por definir ([docs/sprint5.md](docs/sprint5.md)) |
 
-Diseño técnico: [`DISENO_TECNICO.md`](DISENO_TECNICO.md) · Contexto y reglas del proyecto: [`CLAUDE.md`](CLAUDE.md)
+Puesta en marcha en el PC: [`docs/PASOS_PC.md`](docs/PASOS_PC.md) · Diseño técnico: [`DISENO_TECNICO.md`](DISENO_TECNICO.md) · Contexto y reglas del proyecto: [`CLAUDE.md`](CLAUDE.md)
 
 ## Fuente y atribución
 
