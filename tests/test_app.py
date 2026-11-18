@@ -234,3 +234,14 @@ def test_paginas_cargan_sin_errores(pagina, monkeypatch):
     prueba = AppTest.from_file(str(DIRECTORIO_APP / pagina), default_timeout=60).run()
     assert not prueba.exception, prueba.exception
     assert prueba.title  # cada página tiene título
+
+
+def test_guia_muestra_el_manual_con_sus_imagenes():
+    from streamlit.testing.v1 import AppTest
+
+    prueba = AppTest.from_file(str(DIRECTORIO_APP / "guia.py"), default_timeout=30).run()
+    assert not prueba.exception, prueba.exception
+    assert prueba.title[0].value == "Guía de uso"
+    textos = " ".join(m.value for m in prueba.markdown)
+    assert "Muestra de calidad" in textos and "![" not in textos  # imágenes como st.image
+    assert len(prueba.get("imgs")) + len(prueba.get("image")) == 5

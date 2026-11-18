@@ -105,6 +105,34 @@ uv run --group embed streamlit run app/app.py
 
 Se abre en <http://localhost:8501>. Es la misma configuración que tendrá Streamlit Cloud.
 
+## 9. Compartir la app desde tu PC con un enlace público
+
+Sirve para mostrarla a alguien sin desplegarla en la web. Usa un túnel gratuito de Cloudflare: no necesita cuenta ni abrir puertos del router.
+
+Una vez:
+
+```powershell
+winget install --id Cloudflare.cloudflared
+```
+
+(Cierra y abre PowerShell después de instalar.) En `.env` deben estar `SUPABASE_URL` y `SUPABASE_ANON_KEY` (la clave **pública**, nunca la `service_role`).
+
+Cada vez que quieras compartirla:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\publicar_desde_pc.ps1
+```
+
+El script inicia la app, abre el túnel, muestra un enlace `https://….trycloudflare.com`, lo copia al portapapeles y lo abre en tu navegador. Mándalo por correo o WhatsApp.
+
+- Funciona **mientras la ventana siga abierta y el PC encendido**. Para cortar: `Ctrl+C` o cerrar la ventana.
+- El enlace **cambia cada vez** que ejecutas el script.
+- Quien lo abra solo puede **mirar y buscar**. La página Revisión pide correo y contraseña de una cuenta autorizada.
+- La app publicada solo recibe la clave pública: la cadena de conexión de la base (`DATABASE_URL`) nunca sale de tu PC.
+- Si algo falla, el mensaje indica qué revisar; los registros quedan en `logs\app_errores.log` y `logs\tunel.log`.
+
+Para un enlace fijo que no dependa del PC, despliega en Streamlit Cloud (tabla de abajo).
+
 ---
 
 ## Fuera del PC (en la web)

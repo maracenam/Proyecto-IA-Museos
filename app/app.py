@@ -14,6 +14,7 @@ navegacion = st.navigation(
         st.Page("buscar.py", title="Buscar", icon=":material/search:", url_path="buscar"),
         st.Page("revision.py", title="Revisión", icon=":material/fact_check:", url_path="revision"),
         st.Page("acerca.py", title="Método y fuentes", icon=":material/info:", url_path="metodo"),
+        st.Page("guia.py", title="Guía de uso", icon=":material/help:", url_path="guia"),
     ]
 )
 navegacion.run()

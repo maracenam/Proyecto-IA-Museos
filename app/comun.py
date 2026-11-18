@@ -73,7 +73,7 @@ def leyenda_validacion(estados: list[str] | None = None) -> None:
     )
 
 
-def pie() -> None:
+def pie(enlace_guia: bool = True) -> None:
     st.divider()
     st.caption(
         "Fuente: [SURDOC](https://www.surdoc.cl), Servicio Nacional del Patrimonio Cultural, y "
@@ -81,3 +81,8 @@ def pie() -> None:
         "se muestran desde SURDOC con el crédito del fotógrafo. No se publican sitios "
         "arqueológicos ni ubicaciones exactas."
     )
+    if enlace_guia:
+        try:
+            st.page_link("guia.py", label="¿Cómo se usa? Ver la guía", icon=":material/help:")
+        except st.errors.StreamlitPageNotFoundError:
+            pass  # página ejecutada fuera de la navegación (pruebas)

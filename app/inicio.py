@@ -161,6 +161,8 @@ if filas and filas[0] < len(vista):
         detalle = detalle.assign(
             Método=detalle["metodo"].map(NOMBRES_METODO),
             Confianza=detalle["confianza"].map(coma),
+            modelo=detalle["modelo"].fillna("—"),  # las reglas no usan modelo
+            justificacion=detalle["justificacion"].fillna(""),
         )
         st.dataframe(
             detalle[["Campo", "entrada", "valor", "Validación", "Método", "Confianza",

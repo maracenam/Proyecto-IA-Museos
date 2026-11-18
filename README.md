@@ -31,6 +31,8 @@ El observatorio:
 
 Cada cifra viene de una corrida documentada en `docs/sprint*.md`.
 
+¿Cómo se usa? Ver la [guía de uso](docs/MANUAL.md) (también disponible dentro de la app).
+
 ## Arquitectura
 
 ```mermaid
