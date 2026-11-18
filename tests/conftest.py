@@ -29,6 +29,11 @@ def conexion_bd():
         pytest.skip(f"Base no disponible: {error}")
     for archivo in MIGRACIONES:
         con.execute(archivo.read_text(encoding="utf-8"))
+    # Datos de referencia que el pipeline carga en cada normalización: sin ellos, una base nueva
+    # (como la de CI) rechaza las revisiones por categoría inválida.
+    from pipeline.normalize.vocabulario import Vocabulario, sincronizar_vocabulario
+
+    sincronizar_vocabulario(con, Vocabulario.cargar())
     yield con
     con.close()
 
