@@ -89,6 +89,28 @@ try {
     }
     if (-not $enlace) { Fallar "no se pudo abrir el túnel. Revisa logs\tunel.log (¿hay conexión a internet?)." }
 
+    # El enlace aparece antes de que el túnel exista en internet. Si el navegador lo abre antes,
+    # Windows guarda "no existe" en su caché de DNS por varios minutos (DNS_PROBE_FINISHED_NXDOMAIN).
+    # Se espera la conexión y que el nombre resuelva en el DNS de Cloudflare (no en el local,
+    # para no envenenar su caché); luego se limpia la caché local por si acaso.
+    Write-Host "Esperando que el enlace esté activo en internet…" -ForegroundColor Cyan
+    $servidor = ([Uri]$enlace).Host
+    $activo = $false
+    for ($i = 0; $i -lt 90 -and -not $activo; $i++) {
+        Start-Sleep -Seconds 1
+        $conectado = Select-String -Path "logs\tunel.log" -Pattern "Registered tunnel connection" -Quiet
+        if ($conectado) {
+            try {
+                Resolve-DnsName -Name $servidor -Server 1.1.1.1 -DnsOnly -ErrorAction Stop | Out-Null
+                $activo = $true
+            } catch { }
+        }
+        if ($tunel.HasExited) { break }
+    }
+    if (-not $activo) { Fallar "el túnel no quedó activo. Revisa logs\tunel.log." }
+    Start-Sleep -Seconds 3
+    ipconfig /flushdns | Out-Null
+
     Set-Clipboard -Value $enlace
     Write-Host ""
     Write-Host "  La app está publicada en:" -ForegroundColor Green
