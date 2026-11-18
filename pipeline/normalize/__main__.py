@@ -2,8 +2,8 @@
 
 python -m pipeline.normalize correr                      # reglas + LLM (LLM_MODELO)
 python -m pipeline.normalize correr --sin-llm            # solo reglas
-python -m pipeline.normalize muestra --campo material    # CSV para revisión humana
-python -m pipeline.normalize metricas revision/*.csv     # aciertos y umbral calibrado
+python -m pipeline.normalize muestra --campo material    # muestra para revisar en la app
+python -m pipeline.normalize metricas                    # aciertos y umbral calibrado
 """
 
 import argparse
@@ -17,8 +17,9 @@ from dotenv import load_dotenv
 from pipeline.db import conectar
 from pipeline.normalize.calidad import (
     calcular_metricas,
-    exportar_muestra,
+    crear_muestra,
     informe_markdown,
+    leer_muestra_revisada,
     leer_revision,
 )
 from pipeline.normalize.llm import ModeloNoDisponible, Prompt, crear_normalizador
@@ -61,19 +62,23 @@ def correr(args) -> int:
 
 
 def muestra(args) -> int:
-    salida = Path(args.salida or f"revision/muestra_{args.campo}_{args.version}.csv")
     with conectar(_url_base()) as con:
-        n = exportar_muestra(con, args.campo, args.n, args.version, args.semilla, salida)
+        total, revisados = crear_muestra(con, args.campo, args.n, args.version, args.semilla)
     print(
-        f"{n} valores exportados a {salida}. Completa la columna valor_correcto y corre `metricas`."
+        f"Muestra de {args.campo} ({args.version}): {total} valores, {revisados} revisados. "
+        "Se revisa en la app: página Revisión → Muestra de calidad."
     )
     return 0
 
 
 def metricas(args) -> int:
-    filas = leer_revision([Path(r) for r in args.archivos])
+    if args.archivos:  # compatibilidad con revisiones hechas en CSV
+        filas = leer_revision([Path(r) for r in args.archivos])
+    else:
+        with conectar(_url_base()) as con:
+            filas = leer_muestra_revisada(con, args.campos.split(",") if args.campos else None)
     if not filas:
-        raise SystemExit("Ningún archivo tiene la columna valor_correcto completada.")
+        raise SystemExit("Todavía no hay valores revisados en la muestra.")
     print(informe_markdown(calcular_metricas(filas, args.objetivo)))
     return 0
 
@@ -95,16 +100,16 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--sin-llm", action="store_true", help="Solo reglas; lo demás queda pendiente")
     p.set_defaults(funcion=correr)
 
-    p = sub.add_parser("muestra", help="Exporta una muestra aleatoria para revisión humana")
+    p = sub.add_parser("muestra", help="Crea la muestra aleatoria para revisar en la app")
     p.add_argument("--campo", required=True, choices=CAMPOS)
     p.add_argument("--n", type=int, default=50)
     p.add_argument("--version", default="v1")
     p.add_argument("--semilla", type=int, default=2026)
-    p.add_argument("--salida")
     p.set_defaults(funcion=muestra)
 
     p = sub.add_parser("metricas", help="Aciertos por método y umbral calibrado")
-    p.add_argument("archivos", nargs="+")
+    p.add_argument("archivos", nargs="*", help="CSV revisados (opcional; por defecto, la base)")
+    p.add_argument("--campos", help="Limitar a estos campos, separados por coma")
     p.add_argument("--objetivo", type=float, default=0.95, help="Precisión mínima de lo aceptado")
     p.set_defaults(funcion=metricas)
 

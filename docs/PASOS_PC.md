@@ -69,20 +69,21 @@ uv run --group embed python -m pipeline.embed evaluar
 
 La primera vez descarga el modelo (~470 MB). `evaluar` imprime la tabla de las 10 consultas de prueba. **Pega la última línea en el chat** (debe decir 10/10).
 
-## 6. Exportar la muestra para revisión humana
+## 6. Revisar la muestra de calidad (en la app, sin comandos)
+
+La muestra ya está creada en Supabase: 50 valores de material y 50 de objeto elegidos al azar. Se revisa en la app, página **Revisión → Muestra de calidad**, con la cuenta de revisora (ver "Fuera del PC"):
+
+- Para cada valor ves la ficha, la foto y lo que propone el sistema.
+- **Correcto** si está bien (un clic), o elige la categoría correcta y **Guardar corrección**.
+- **Saltar** deja un valor para después; el avance queda guardado y se puede seguir otro día.
+
+Son unos 20–30 minutos, idealmente con la arqueóloga. La precisión por método se publica sola en **Método y fuentes**. Si quieres verla también en la terminal:
 
 ```powershell
-uv run python -m pipeline.normalize muestra --campo material
-uv run python -m pipeline.normalize muestra --campo objeto
+uv run python -m pipeline.normalize metricas
 ```
 
-Crea `revision\muestra_material_v1.csv` y `revision\muestra_objeto_v1.csv`. Ábrelos en Excel (idealmente con la arqueóloga) y llena la columna **valor_correcto** en cada fila con la categoría correcta, aunque coincida con la propuesta (categorías en `vocab\categorias.csv`). Guarda como **CSV UTF-8**. Luego:
-
-```powershell
-uv run python -m pipeline.normalize metricas revision\muestra_material_v1.csv revision\muestra_objeto_v1.csv
-```
-
-**Pega el resultado en el chat**: con eso se publica la precisión por método y se fija el umbral.
+Si en el futuro se normaliza con un prompt nuevo, la muestra de esa versión se crea con `uv run python -m pipeline.normalize muestra --campo material --version v2` (y `--campo objeto`).
 
 ## 7. Programar el procesamiento diario
 
@@ -111,6 +112,6 @@ Se abre en <http://localhost:8501>. Es la misma configuración que tendrá Strea
 | Dónde | Qué | Detalle |
 |---|---|---|
 | Supabase → Authentication | Desactivar registros públicos, crear la cuenta de la revisora y autorizarla con SQL | `docs/sprint3.md` §3.1 |
-| Supabase → SQL Editor | Quitar permisos por defecto en las vistas nuevas (`revoke …`) | `docs/sprint3.md` §3.1, paso 5 |
+| Supabase → SQL Editor | Quitar permisos por defecto en las vistas y funciones nuevas (`revoke …`) | `docs/sprint3.md` §3.1, paso 5 |
 | GitHub → Settings → Secrets and variables → Actions | Secret `SUPABASE_DATABASE_URL` (la misma cadena del paso 2) y variable `SURDOC_USER_AGENT`; correr el workflow *extraccion* a mano; activar correos de workflows fallidos | `docs/sprint5.md` §2 |
 | share.streamlit.io | Desplegar `app/app.py` con los secrets `SUPABASE_URL`, `SUPABASE_ANON_KEY` y `EMBEDDING_MODELO` | `docs/sprint3.md` §3.2 y `docs/sprint4.md` §4 |

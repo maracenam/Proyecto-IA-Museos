@@ -105,3 +105,44 @@ def valores_de_ficha(valores: list[dict], surdoc_id: str) -> pd.DataFrame:
     orden = list(NOMBRES_CAMPO)
     df["_o"] = df["campo"].map(orden.index)
     return df.sort_values(["_o", "orden"]).drop(columns="_o").reset_index(drop=True)
+
+
+NOMBRES_METODO = {
+    "regla_id": "Vocabulario (ID)",
+    "sinonimo": "Vocabulario (sinónimo)",
+    "llm": "IA local",
+}
+UMBRALES = [round(0.5 + 0.05 * i, 2) for i in range(10)]  # 0,50 … 0,95
+
+
+def metricas_muestra(filas: list[dict], objetivo: float = 0.95) -> dict:
+    """Precisión por método y umbral recomendado a partir de la muestra revisada.
+    Umbral recomendado: el menor con el que lo aceptado sin revisión alcanza el objetivo."""
+    revisados = [f for f in filas if f.get("valor_correcto") is not None]
+    for f in revisados:
+        f["_acierto"] = f["valor_correcto"] == f["valor_propuesto"]
+    tabla = [
+        {
+            "Método": NOMBRES_METODO.get(metodo, metodo),
+            "Revisados": len(grupo),
+            "Aciertos": sum(f["_acierto"] for f in grupo),
+            "Precisión": sum(f["_acierto"] for f in grupo) / len(grupo),
+        }
+        for metodo in NOMBRES_METODO
+        if (grupo := [f for f in revisados if f["metodo"] == metodo])
+    ]
+    umbral = None
+    for t in UMBRALES:
+        aceptados = [f for f in revisados if float(f["confianza"]) >= t]
+        if aceptados and sum(f["_acierto"] for f in aceptados) / len(aceptados) >= objetivo:
+            umbral = t
+            break
+    aciertos = sum(f["_acierto"] for f in revisados)
+    return {
+        "total": len(filas),
+        "revisados": len(revisados),
+        "precision": aciertos / len(revisados) if revisados else None,
+        "por_metodo": pd.DataFrame(tabla),
+        "umbral_recomendado": umbral,
+        "objetivo": objetivo,
+    }

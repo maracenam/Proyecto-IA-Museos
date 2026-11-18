@@ -14,7 +14,10 @@ from typing import Protocol
 
 import httpx
 
-VISTAS = ("fichas_publicas", "valor_vigente", "cola_revision", "categorias", "parametros")
+VISTAS = (
+    "fichas_publicas", "valor_vigente", "cola_revision", "categorias", "parametros",
+    "muestra_calidad_detalle",
+)  # fmt: skip
 
 
 class ErrorSesion(Exception):
@@ -38,6 +41,11 @@ class FuenteDatos(Protocol):
     def buscar(self, vector: str, modelo: str, limite: int = 10) -> list[dict]: ...
 
     def iniciar_sesion(self, correo: str, clave: str) -> Sesion: ...
+
+    def responder_muestra(
+        self, sesion: Sesion, surdoc_id: str, campo: str, orden: int,
+        version_prompt: str, valor_correcto: str,
+    ) -> None: ...  # fmt: skip
 
     def guardar_revision(
         self, sesion: Sesion, surdoc_id: str, campo: str, orden: int,
@@ -107,6 +115,34 @@ class FuenteSupabase:
         if respuesta.status_code == 409:
             raise ErrorEscritura(f"«{valor_corregido}» no es una categoría válida para {campo}.")
         raise ErrorEscritura(f"La base rechazó la revisión (HTTP {respuesta.status_code}).")
+
+    def responder_muestra(
+        self, sesion, surdoc_id, campo, orden, version_prompt, valor_correcto
+    ) -> None:
+        """Una sola llamada (RPC): guarda la respuesta y la revisión en la misma transacción."""
+        respuesta = self._http.post(
+            "/rest/v1/rpc/responder_muestra",
+            json={
+                "p_surdoc_id": surdoc_id,
+                "p_campo": campo,
+                "p_orden": orden,
+                "p_version_prompt": version_prompt,
+                "p_valor_correcto": valor_correcto,
+            },  # fmt: skip
+            headers=self._cabeceras(sesion.token),
+        )
+        if respuesta.status_code not in (200, 204):
+            raise _error_supabase(respuesta, valor_correcto, campo)
+
+
+def _error_supabase(respuesta: httpx.Response, valor: str, campo: str) -> ErrorEscritura:
+    if respuesta.status_code in (401, 403):
+        return ErrorEscritura("Tu usuario no está autorizado como revisor.")
+    if respuesta.status_code == 409:
+        return ErrorEscritura(f"«{valor}» no es una categoría válida para {campo}.")
+    if respuesta.status_code == 404:
+        return ErrorEscritura("Ese valor ya no está en la muestra.")
+    return ErrorEscritura(f"La base rechazó la respuesta (HTTP {respuesta.status_code}).")
 
 
 class FuentePostgres:
@@ -189,6 +225,27 @@ class FuentePostgres:
             raise ErrorEscritura(
                 f"«{valor_corregido}» no es una categoría válida para {campo}."
             ) from error
+
+    def responder_muestra(
+        self, sesion, surdoc_id, campo, orden, version_prompt, valor_correcto
+    ) -> None:
+        errores = self._psycopg.errors
+        try:
+            with self.con.transaction():
+                self._como("authenticated", sesion.usuario_id)
+                self.con.execute(
+                    "select responder_muestra(%s, %s, %s, %s, %s)",
+                    (surdoc_id, campo, orden, version_prompt, valor_correcto),
+                )
+                self._restaurar()  # si falla, el rollback ya deshace el cambio de rol
+        except errores.InsufficientPrivilege as error:
+            raise ErrorEscritura("Tu usuario no está autorizado como revisor.") from error
+        except errores.ForeignKeyViolation as error:
+            raise ErrorEscritura(
+                f"«{valor_correcto}» no es una categoría válida para {campo}."
+            ) from error
+        except errores.NoDataFound as error:
+            raise ErrorEscritura("Ese valor ya no está en la muestra.") from error
 
 
 def crear_fuente(config: dict[str, str | None]) -> FuenteDatos:

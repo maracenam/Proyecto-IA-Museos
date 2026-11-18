@@ -148,3 +148,60 @@ def informe_markdown(metricas: dict) -> str:
         + (f"{recomendado:.2f}" if recomendado is not None else "ninguno lo alcanza; revisar todo"),
     ]
     return "\n".join(lineas)
+
+
+# --- Muestra en la base (se revisa desde la app, página Revisión → Muestra de calidad) ---
+
+SQL_CREAR_MUESTRA = """
+insert into muestra_calidad
+    (surdoc_id, campo, orden, version_prompt, posicion, valor_propuesto, metodo, confianza)
+select surdoc_id, campo, orden, version_prompt,
+       row_number() over (order by orden_azar), valor_normalizado, metodo, confianza
+from (
+    select n.*, md5(n.surdoc_id || '|' || n.campo || '|' || n.orden || '|' || %(semilla)s)
+                as orden_azar
+    from normalizaciones n
+    join registros r using (surdoc_id)
+    where n.campo = %(campo)s and n.version_prompt = %(version)s and not r.dado_de_baja
+    order by orden_azar
+    limit %(n)s
+) elegidos
+on conflict do nothing
+"""
+
+
+def crear_muestra(
+    con: psycopg.Connection, campo: str, n: int, version_prompt: str, semilla: int
+) -> tuple[int, int]:
+    """Crea la muestra de un campo si no existe (orden al azar pero reproducible con la semilla).
+    No toca respuestas ya dadas. Devuelve (valores en la muestra, ya revisados)."""
+    existentes = con.execute(
+        "select count(*) from muestra_calidad where campo = %s and version_prompt = %s",
+        (campo, version_prompt),
+    ).fetchone()[0]
+    if existentes == 0:
+        with con.transaction():
+            con.execute(
+                SQL_CREAR_MUESTRA,
+                {"campo": campo, "version": version_prompt, "n": n, "semilla": str(semilla)},
+            )
+    return con.execute(
+        "select count(*), count(valor_correcto) from muestra_calidad "
+        "where campo = %s and version_prompt = %s",
+        (campo, version_prompt),
+    ).fetchone()
+
+
+def leer_muestra_revisada(
+    con: psycopg.Connection, campos: list[str] | None = None
+) -> list[FilaRevisada]:
+    filas = con.execute(
+        """select metodo, confianza, valor_propuesto, valor_correcto from muestra_calidad
+           where valor_correcto is not null
+             and (%(campos)s::text[] is null or campo = any(%(campos)s))""",
+        {"campos": campos},
+    ).fetchall()
+    return [
+        FilaRevisada(metodo, float(conf), sin_acentos(correcto) == sin_acentos(propuesto))
+        for metodo, conf, propuesto, correcto in filas
+    ]

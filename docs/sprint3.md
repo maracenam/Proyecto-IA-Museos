@@ -63,7 +63,11 @@ uv run streamlit run app/app.py
 5. **SQL Editor:** quita los permisos por defecto en los objetos nuevos (capa extra de defensa; RLS ya bloquea la escritura):
    ```sql
    revoke insert, update, delete, truncate on categorias, parametros, valor_vigente,
-       fichas_publicas, cola_revision from anon, authenticated;
+       fichas_publicas, cola_revision, muestra_calidad_detalle from anon, authenticated;
+   revoke insert, delete, truncate on muestra_calidad from anon, authenticated;
+   revoke execute on function responder_muestra(text, text, integer, text, text) from public, anon;
+   revoke execute on function buscar_fichas(extensions.vector, text, integer) from public;
+   grant execute on function buscar_fichas(extensions.vector, text, integer) to anon, authenticated;
    ```
 
 ### 3.2 Streamlit Community Cloud

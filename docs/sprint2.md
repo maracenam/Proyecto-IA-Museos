@@ -7,8 +7,8 @@
 | Criterio | Estado |
 |---|---|
 | Tres campos normalizados sin costo externo | ✅ Código listo (objeto, material, estado de conservación; técnica también). Reglas probadas sobre las 77 fichas reales; el LLM local se corre en tu PC (§3) |
-| Muestra de 50 por campo revisada | ⏳ Requiere una persona: `muestra` genera el CSV; falta completar `valor_correcto` |
-| Aciertos por método documentados | ⏳ `metricas` los calcula a partir de la muestra revisada |
+| Muestra de 50 por campo revisada | ⏳ Muestra creada en Supabase (50 material + 50 objeto); se revisa en la app, Revisión → Muestra de calidad |
+| Aciertos por método documentados | ⏳ Se calculan y publican solos en la app (Método y fuentes) a medida que se revisa |
 | Umbral calibrado | ⏳ `metricas` propone el umbral; se registra aquí y en `.env` |
 
 ## 1. Qué se construyó
@@ -92,3 +92,12 @@ Estado de conservación y técnica no necesitan muestra: los 77 estados vienen d
 - **Categorías provisorias:** las de material y tipo de objeto deben validarse con la arqueóloga (ver `vocab/LEEME.md`). Cambiarlas implica una nueva versión de prompt.
 - **Umbral:** se parte en 0,8 hasta tener la muestra revisada.
 - **Método `llm` desde la descripción:** se registra con `origen = descripcion`. Si la revisión muestra que esos valores aciertan mucho menos, conviene mandarlos siempre a revisión en la primera ronda.
+
+## 5. Muestra de calidad en la app (cambio posterior)
+
+La revisión por CSV en Excel resultó poco práctica. Se reemplazó por la pestaña **Revisión → Muestra de calidad** (migración `008_muestra_calidad.sql`):
+
+- `python -m pipeline.normalize muestra --campo X` crea la muestra en la tabla `muestra_calidad` (orden al azar reproducible con la semilla; no repite ni pisa respuestas).
+- La revisora ve una tarjeta por valor y responde con **Correcto** o eligiendo la categoría correcta. Nada viene marcado de antemano y no se muestran la confianza ni el método, para no influir en la respuesta.
+- `responder_muestra()` guarda la respuesta y una fila en `revisiones` en la misma transacción: el valor queda "revisado por persona" en la colección.
+- La precisión por método y el umbral recomendado se publican en "Método y fuentes"; `python -m pipeline.normalize metricas` los muestra en la terminal (también acepta los CSV antiguos).
